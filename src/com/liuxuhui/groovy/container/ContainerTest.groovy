@@ -24,7 +24,7 @@ println("aList=" + aList.toString())
  *         存值：aMap.newKey = "新元素"     取值：aMap.keyName
  */
 def aMap = ["key1":1, key2:"韩梅梅"] //key不用引号包括的时候，会被默认处理成字符串"key2"
-println(aMap.toString())
+println("aMap:" + aMap.toString())
 println("取值：" + aMap.key1)
 aMap.key3 = false
 println("存值：" + aMap.toString())
@@ -32,8 +32,8 @@ println("存值：" + aMap.toString())
 def key1 = "who"
 def bMap = [key1:"Key是key1还是who？"]
 def cMap = [(key1):"Key是key1还是who？"] //当Key想用一个变量的值时，需用（）包括
-println(bMap.toString())
-println(cMap.toString())
+println("bMap:" + bMap.toString())
+println("cMap:" + cMap.toString())
 
 /**
  * Range类：Range是Groovy对List的一种扩展；主要用于整型的一个范围值。取值是不能数组越界
