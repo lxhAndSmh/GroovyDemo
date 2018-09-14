@@ -44,6 +44,7 @@ Groovy的容器类只有三种：
   变量存取：可以直接通过索引进行存取，不用担心越界；如果索引越界，List会自己给索引添加元素。  
   注：assert关键字，翻译为断言，用于测试时判断假设的数据是否正确）     
   ```
+  示例：
   def aList = [1, "李雷", false]
   println("aList=" + aList.toString())
   assert aList[6] == null
@@ -60,6 +61,7 @@ Groovy的容器类只有三种：
 > 变量定义：Map变量由[:]定义，冒号的左边是Key，右边是Value；key必须是字符串，Value可以是任何对象。Key可以用''或""包起来，也可以不用引号包起来。（为了代码的清晰，个人建议用引号）  
   变量存取：存值：aMap.newKey = "新元素"     取值：aMap.keyName 
   ```
+  示例：
   def aMap = ["key1":1, key2:"韩梅梅"] //key不用引号包括的时候，会被默认处理成字符串"key2"
   println("aMap:" + aMap.toString())
   println("取值：" + aMap.key1)
@@ -83,6 +85,7 @@ Groovy的容器类只有三种：
 > 变量定义：Range类型变量由begin值+..+end值表示，如果不想包含最后一个元素，则begin值+..<+end值表示    
   变量的取值：aRange.get(索引)，（第一个值和最后一个可以用以下的方式；起始值：aRange.from，最后一个值：aRange.to）  
   ```
+  示例：
   def aRange = 1..5
   println("aRange:begin=" + aRange.from + ",end=" + aRange.to + ",size=" + aRange.size())
   println("aRange:" + aRange.last())
@@ -95,12 +98,14 @@ Groovy的容器类只有三种：
   bRange:begin=1,end=4,size=4
   ```
 ## 闭包   
-- 定义：闭包，英文名叫Closure，是一种数据类型，代表了一段可执行的代码；闭包是一段代码，所以需要用花括号括起来，->这个箭头很关键，前面表示参数定义，后面表示代码   
-（注：当然没有参数的时候，可以不用箭头->）  
+- 定义：闭包，英文名叫Closure，是一种数据类型，代表了一段可执行的代码；闭包是一段代码，所以需要用花括号括起来，->这个箭头很关键，前面表示参数定义，后面表示代码。   
+（注：没有定义参数的时候，可以不用箭头->。此时，如果没有使用->,则闭包隐含一个参数it，和this的作用类型；如果使用->,则表示该闭包没有参数，给该闭包传参时，会报错）
+
 >定义格式如下：  
 def xxx = {parameters -> code} 或者   
-def xxx = {code}   //无参数，纯code时，不需要->符合
+def xxx = {code}   //无参数，纯code时，不需要->符号    
 ```
+示例：
 def aClosure = {
     String name, int age ->
         println("My name is " + name + ",I'm " + age + " years")
@@ -111,15 +116,85 @@ aClosure.call("李雷", 12)
  
 运行结果：  
 My name is 李雷,I'm 12 years
+
+//如果没有使用->,则闭包隐含一个参数it，和this的作用类型
+def bClosure = {
+    println("bClosure：My name is $it")
+}
+//等同于：
+def cClosure = {it ->
+    println("cClosure：My name is $it")
+}
+bClosure.call("小明")
+cClosure.call("小红")
+//没有定义参数时，且使用->，表示该闭包没有参数，不能给该闭包传参
+def dClosure = { ->
+    println("Hello")
+}
+dClosure.call()
+运行结果：
+bClosure：My name is 小明
+cClosure：My name is 小红
+dClosure：Hello
 ```  
 - 闭包的调用  
 > 闭包对象.call(参数) 或者  
   闭包对象(参数)
   ```
+  示例：
   aClosure.call("李雷", 12)
   aClosure("韩梅梅", 11)
   
   运行结果：
   My name is 李雷,I'm 12 years
   My name is 韩梅梅,I'm 11 years
-  ```
+  ```  
+- 闭包省略圆括号
+> Groovy中，当函数的最后一个参数是闭包的话，可以省略圆括号  
+注意：这个特点非常关键，因为在以后的Gradle中经常会出现如下的代码：  
+```
+ task hello {
+     doLast {
+         println "hello"
+     }
+ }
+ 完整的代码应该是这样的：
+ task hello {
+     doLast（{
+         println "hello"
+     }）
+ }
+```
+```
+示例：
+//public static <T> List<T>each(List<T> self, Closure closure)
+//此函数表示针对List的每一个元素都会调用closure做一些处理；在使用这个each函数的时候，我们传递一个怎样的Closure进去呢？如下：
+
+def aList = [1,2,3,4,5,"吉米",true]
+aList.each{ //调用each的圆括号不见了，原来，Groovy中，当函数的最后一个参数是闭包的话，可以省略圆括号
+    print(it)
+}
+println()
+//等同于：
+aList.each({
+    print(it)
+})
+println()
+//例2:
+def testClosure(String name, int age, Closure closure) {
+    println("testClosure：My name is " + name + ",I'm " + age + " years")
+    closure.call()
+}
+//省略圆括号时，感觉println("I am in closure")立即会被调用一样，更简洁直接
+testClosure("舒淇", 18, {println("I am in closure")})
+//等同于：带括号时，会感觉只是把Closure对象传了进去，至于带对象有没有被调用就不知道了
+testClosure("舒淇", 18, ({println("I am in closure")}))
+
+运行结果：
+12345吉米true
+12345吉米true
+testClosure：My name is 舒淇,I'm 18 years
+I am in closure
+testClosure：My name is 舒淇,I'm 18 years
+I am in closure
+```
