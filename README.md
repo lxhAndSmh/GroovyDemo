@@ -197,4 +197,10 @@ testClosure：My name is 舒淇,I'm 18 years
 I am in closure
 testClosure：My name is 舒淇,I'm 18 years
 I am in closure
-```
+```   
+- 如何确定Closure的参数  
+>  对于List的each函数所需要的Closure,它的参数是什么？有多少个参数，返回值是什么？   
+   所以，Closure虽然方便，但是它一定会和使用它的上下文有极强的关联；要不，类似回调这样的东西，我们无从知道调用者需要传递什么参数给Closure。   
+   如何解决？只能通过查询API文档了解上下文语义。   
+   例如：对Map的findAll而言，Closure可以有两个参数，findAll会将Key和Value分别传进去，如果Closure返回true，表示该元素是自己想要的，返回
+   false表示该元素不是自己要找的。
