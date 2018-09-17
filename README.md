@@ -203,4 +203,106 @@ I am in closure
    所以，Closure虽然方便，但是它一定会和使用它的上下文有极强的关联；要不，类似回调这样的东西，我们无从知道调用者需要传递什么参数给Closure。   
    如何解决？只能通过查询API文档了解上下文语义。   
    例如：对Map的findAll而言，Closure可以有两个参数，findAll会将Key和Value分别传进去，如果Closure返回true，表示该元素是自己想要的，返回
-   false表示该元素不是自己要找的。
+   false表示该元素不是自己要找的。  
+- 脚本import其它类   
+> 脚本类和脚本的区别：  
+脚本类：和Java类似，如果类、变量和函数没有声明public/private等访问权限，默认是public   
+脚本：Groovy可以像写脚本一样，把要做的事情写在xxx.groovy文件中，可以通过groovy xxx.groovy执行这个脚本。(只要xxx.groovy不是像Java那样的class，它就是一个脚本)   
+```
+脚本类：
+class TestModel {
+    def name
+    def age
+
+    TestModel(name, age) {
+        this.name = name
+        this.age = age
+    }
+
+    def print() {
+        println("My name is " + name + " ，i am " + age + " years。")
+    }
+}
+
+脚本import的代码：
+//如果该脚本和被导入的类在同一个包中，不需要import导入
+import com.liuxuhui.groovy.script.TestModel
+
+TestModel testModel = new TestModel("李白", 28);
+testModel.print()
+运行结果：
+My name is 李白 ，i am 28 years。
+```  
+- 脚本到底是什么
+>Java中，我们最熟悉的是类，要做的事情必须写到类里；而Groovy可以像写脚本一样，把要做的事情写在xxx.groovy中，通过groovy xxx.groovy直接   
+执行这个脚本，这是什么原因呢？众所周知Groovy是基于Java的，原来Groovy会先把xxx.groovy中的内容转换成一个Java类。   
+比如：要把此TestGroovy.groovy转换成Java类：   
+命令行进入所在包的目录下，执行 groovyc -d classes TestGroovy.groovy   
+（groovyc是Groovy的编译命令，-d classes用于将编译得到的class文件拷贝到classes文件夹下。）  
+由TestGroovy.class文件可以看出：  
+>>1.TestGroovy.groovy被转换成了一个TestGroovy类，它从script派生   
+2.每一个脚本都会生成一个 static void main函数；当我们执行groovy TestGroovy.groovy的时候，其实就是用Java去执行这个main函数   
+3.脚本中所有的代码都会放到run函数中。   
+4.如果脚本中定义了函数，则函数会被定义在TestGroovy类中。 
+```
+脚本TestGroovy.groovy的代码：
+@groovy.transform.Field
+def y = 1
+def z = 2
+def printy() {
+    println("y===" + y)
+}
+printy()
+
+执行 groovyc -d classes TestGroovy.groovy反编译后的TestGroovy.class
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by Fernflower decompiler)
+//
+
+package com.liuxuhui.groovy.script;
+
+import groovy.lang.Binding;
+import groovy.lang.Script;
+import org.codehaus.groovy.runtime.BytecodeInterface8;
+import org.codehaus.groovy.runtime.InvokerHelper;
+import org.codehaus.groovy.runtime.callsite.CallSite;
+
+public class TestGroovy extends Script {
+    Object y;
+
+    public TestGroovy() {
+        CallSite[] var1 = $getCallSiteArray();
+        super();
+        byte var2 = 1;
+        this.y = Integer.valueOf(var2);
+    }
+
+    public TestGroovy(Binding context) {
+        CallSite[] var2 = $getCallSiteArray();
+        super(context);
+        byte var3 = 1;
+        this.y = Integer.valueOf(var3);
+    }
+
+    public static void main(String... args) {
+        CallSite[] var1 = $getCallSiteArray();
+        var1[0].call(InvokerHelper.class, TestGroovy.class, args);
+    }
+
+    public Object run() {
+        CallSite[] var1 = $getCallSiteArray();
+        Object var10000 = null;
+        Object z = 2;
+        return !__$stMC && !BytecodeInterface8.disabledStandardMetaClass() ? this.printy() : var1[1].callCurrent(this);
+    }
+
+    public Object printy() {
+        CallSite[] var1 = $getCallSiteArray();
+        return var1[2].callCurrent(this, var1[3].call("y===", this.y));
+    }
+}
+```  
+> 脚本中的变量和作用域:   
+如上的函数printy被定义成TestGroovy类的成员函数，而def z = 2,是在run中创建的；所以从代码上看好像是在整个脚本中定义的，但实际上函数printy反问不了z。   
+那么如何才能反问定义的变量呢，添加注解 @groovy.transform.Field，这样就可以彻底的是test的成员变量了。 
