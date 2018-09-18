@@ -306,3 +306,86 @@ public class TestGroovy extends Script {
 > 脚本中的变量和作用域:   
 如上的函数printy被定义成TestGroovy类的成员函数，而def z = 2,是在run中创建的；所以从代码上看好像是在整个脚本中定义的，但实际上函数printy反问不了z。   
 那么如何才能反问定义的变量呢，添加注解 @groovy.transform.Field，这样就可以彻底的是test的成员变量了。 
+- I\O操作
+> 读文件：def aFile = new File(文件路径)，在Groovy中就是这么简单   
+>>读取每一行：aFile.eachLine{}  
+直接获取文件内容：aFile.bytes  
+使用闭包操作InputStream，在Gradle里也会经常看到 :  aFile.withInputStream{ input ->  操作input. 不用close。Groovy会自动替你close}   
+
+> 写文件： 
+>>def srcFile = new File(源文件名)    
+def targetFile = new File(目标文件名)   
+targetFile.withOutputStream{ os->   
+srcFile.withInputStream{ ins->   
+os << ins   //利用OutputStream的<<操作符重载，完成从inputstream到OutputStream的输出   
+}  
+重命名：targetFile.renameTo(new File("路径/新文件名称"))
+
+> Groovy的I\O操作代码非常简洁。如有看不懂的，请牢记Groovy I\O操作相关类的SDK地址。   
+ [java.io.File]( http://docs.groovy-lang.org/latest/html/groovy-jdk/java/io/File.html)  
+ [java.io.InputStream]( http://docs.groovy-lang.org/latest/html/groovy-jdk/java/io/InputStream.html)     
+ [java.io.OutputStream]( http://docs.groovy-lang.org/latest/html/groovy-jdk/java/io/OutputStream.html)    
+ [java.io.Reader]( http://docs.groovy-lang.org/latest/html/groovy-jdk/java/io/Reader.html)    
+ [java.io.Writer]( http://docs.groovy-lang.org/latest/html/groovy-jdk/java/io/Writer.html)    
+ [java.io.Path]( http://docs.groovy-lang.org/latest/html/groovy-jdk/java/nio/file/Path.html)    
+```
+示例：
+def readFile = new File("/Users/liuxuhui/groovyproject/GroovyDemo/.gitignore")
+//读取文件的每一行内容
+readFile.eachLine {
+    println(it)
+}
+//使用闭包操作inputStream，在Gradle里也会经常看到，操作inputStream后不用close,Groovy会自动替你close
+readFile.withInputStream {
+    StringBuilder stringBuilder = new StringBuilder()
+    String line
+    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(it))
+    while ((line = bufferedReader.readLine()) != null) {
+        stringBuilder.append(line + "\n")
+    }
+    println("BufferedReader:\n" + stringBuilder.toString())
+}
+//readFile.bytes 文件内容一次性读出，等同getBytes()
+println("bytes:\n" + new String(readFile.bytes))
+
+//写文件
+def targetFile = new File("./output.txt")
+targetFile.withOutputStream {out ->
+    readFile.withInputStream { input ->
+        //copy文件
+        out << input
+        //重命名
+        targetFile.renameTo(new File("./newname.txt"))
+    }
+}
+
+运行结果：
+# Created by .ignore support plugin (hsz.mobi)
+### Example user template template
+### Example user template
+
+# IntelliJ project files
+.idea
+*.iml
+out
+BufferedReader:
+# Created by .ignore support plugin (hsz.mobi)
+### Example user template template
+### Example user template
+
+# IntelliJ project files
+.idea
+*.iml
+out
+
+bytes:
+# Created by .ignore support plugin (hsz.mobi)
+### Example user template template
+### Example user template
+
+# IntelliJ project files
+.idea
+*.iml
+out
+
+```
